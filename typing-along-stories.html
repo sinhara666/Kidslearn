@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Along Stories</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .story-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .story-text {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 16px;
+            min-height: 120px;
+        }
+        .typed {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 4px;
+        }
+        .current {
+            background: #FFC107;
+            color: black;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+        .remaining {
+            color: #999;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-family: monospace;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(118, 75, 162, 0.3);
+        }
+        .progress {
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.1s;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            min-height: 25px;
+        }
+        .complete {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .reset-btn:hover {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Typing Along Stories ✨</h1>
+        
+        <div class="story-selector" id="storySelector"></div>
+        
+        <div class="story-text" id="storyText"></div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <input type="text" id="typingInput" placeholder="Start typing here..." autofocus>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="accuracy">100%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="speed">0</div>
+                <div class="stat-label">Words/Min</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="progress">0%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <button class="reset-btn" onclick="resetStory()">Start Over</button>
+    </div>
+
+    <script>
+        const stories = {
+            "The Cat": "Once upon a time, there was a curious cat named Whiskers. Whiskers loved to explore every corner of the house. One sunny afternoon, Whiskers discovered a dusty old box in the attic. Inside was a mysterious map! The map showed the location of a hidden treasure somewhere in the backyard. Whiskers followed the map carefully, digging under the old oak tree. To her delight, she found a box filled with shiny buttons and bits of string. Whiskers had found her greatest treasure!",
+            
+            "Moon Adventure": "A little fox named Luna looked up at the moon one night. She wondered what it would be like to visit the moon. Just then, a magical ladder made of starlight appeared! Luna climbed up, up, and up into the sky. The moon was even more beautiful than she imagined. Moon rabbits greeted her with a cheerful dance. They shared moon cheese and told stories about their moon adventures. When it was time to go home, Luna climbed back down the starlight ladder, her heart full of wonder and joy.",
+            
+            "The Golden Acorn": "In the heart of an ancient forest lived a wise old squirrel named Oakley. Oakley had a special talent for finding magical acorns. One autumn day, Oakley spotted a golden acorn hanging from the tallest oak tree. To reach it, Oakley had to be brave and clever. She jumped from branch to branch, higher and higher. Finally, with one mighty leap, she grabbed the golden acorn! The acorn granted Oakley one special wish. She wished for all animals in the forest to have enough food for the long winter. Her wish came true, and all the animals lived happily ever after.",
+            
+            "Rainy Day Fun": "It was raining outside, and Emma thought her day was ruined. She couldn't play in the park or ride her bike. Then she had an idea! Emma built a fort out of blankets and pillows. She made it into a magical castle. Her little brother joined her inside. They told ghost stories, played board games, and ate cookies. They imagined they were explorers discovering a hidden kingdom. When the rain finally stopped, Emma realized the rainy day had been the best day ever. Sometimes the best adventures happen right at home!"
+        };
+
+        let currentStory = '';
+        let typedText = '';
+        let startTime = null;
+
+        function initializeApp() {
+            const storySelector = document.getElementById('storySelector');
+            Object.keys(stories).forEach(title => {
+                const btn = document.createElement('button');
+                btn.textContent = title;
+                btn.onclick = () => selectStory(title, btn);
+                storySelector.appendChild(btn);
+            });
+            selectStory(Object.keys(stories)[0], storySelector.children[0]);
+        }
+
+        function selectStory(title, btn) {
+            currentStory = stories[title];
+            typedText = '';
+            startTime = null;
+            document.getElementById('typingInput').value = '';
+            
+            document.querySelectorAll('.story-selector button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            updateDisplay();
+            document.getElementById('typingInput').focus();
+        }
+
+        function resetStory() {
+            typedText = '';
+            startTime = null;
+            document.getElementById('typingInput').value = '';
+            document.getElementById('message').textContent = '';
+            updateDisplay();
+            document.getElementById('typingInput').focus();
+        }
+
+        function updateDisplay() {
+            const input = document.getElementById('typingInput');
+            typedText = input.value;
+            
+            if (!startTime && typedText.length > 0) {
+                startTime = Date.now();
+            }
+
+            let html = '';
+            let correctCount = 0;
+
+            for (let i = 0; i < currentStory.length; i++) {
+                if (i < typedText.length) {
+                    if (typedText[i] === currentStory[i]) {
+                        html += `<span class="typed">${currentStory[i]}</span>`;
+                        correctCount++;
+                    } else {
+                        html += `<span style="background: #f44336; color: white;">${currentStory[i]}</span>`;
+                    }
+                } else if (i === typedText.length) {
+                    html += `<span class="current">${currentStory[i]}</span>`;
+                } else {
+                    html += `<span class="remaining">${currentStory[i]}</span>`;
+                }
+            }
+
+            document.getElementById('storyText').innerHTML = html;
+
+            // Progress
+            const progress = Math.round((typedText.length / currentStory.length) * 100);
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progress').textContent = progress + '%';
+
+            // Accuracy
+            if (typedText.length > 0) {
+                const accuracy = Math.round((correctCount / typedText.length) * 100);
+                document.getElementById('accuracy').textContent = accuracy + '%';
+            } else {
+                document.getElementById('accuracy').textContent = '100%';
+            }
+
+            // Speed
+            if (startTime && typedText.length > 0) {
+                const minutes = (Date.now() - startTime) / 60000;
+                const words = typedText.split(' ').length;
+                const wpm = Math.round(words / minutes);
+                document.getElementById('speed').textContent = wpm;
+            } else {
+                document.getElementById('speed').textContent = '0';
+            }
+
+            // Completion message
+            if (typedText.length === currentStory.length && correctCount === typedText.length) {
+                document.getElementById('message').innerHTML = '<span class="complete">🎉 Perfect! You did it! 🎉</span>';
+            } else if (typedText.length === currentStory.length) {
+                document.getElementById('message').textContent = '✓ Finished! Check your accuracy above.';
+            } else if (typedText.length > 0 && correctCount < typedText.length) {
+                const errors = typedText.length - correctCount;
+                document.getElementById('message').textContent = `⚠️ ${errors} mistake${errors > 1 ? 's' : ''} so far — keep going!`;
+            } else {
+                document.getElementById('message').textContent = '';
+            }
+        }
+
+        document.getElementById('typingInput').addEventListener('input', updateDisplay);
+        document.getElementById('typingInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        initializeApp();
+    </script>
+</body>
+</html>
